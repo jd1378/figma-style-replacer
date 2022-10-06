@@ -2,77 +2,145 @@ import {
   Button,
   Columns,
   Container,
-  Divider,
-  LoadingIndicator,
+  Dropdown,
   Muted,
   render,
+  SegmentedControl,
   Text,
-  Textbox,
   VerticalSpace,
 } from '@create-figma-plugin/ui';
 import { emit, on } from '@create-figma-plugin/utilities';
-import { h } from 'preact';
+import { h, JSX } from 'preact';
 import { useCallback, useEffect, useState } from 'preact/hooks';
-import isEmpty from 'lodash/isEmpty';
 
 import {
   CloseHandler,
-  SearchAndSelectHandler,
-  SearchOptions,
-  SearchResultHandler,
+  GetStylesHandler,
+  GetStylesResultHandler,
+  ReplaceStyleHandler,
 } from './types';
-import TextField from './text_field';
+
+type StyleOption = {
+  text: string;
+  value: string;
+};
+
+const StyleTypesOptions = [
+  {
+    value: 'EFFECT',
+  },
+  {
+    value: 'PAINT',
+  },
+  {
+    value: 'TEXT',
+  },
+  {
+    value: 'GRID',
+  },
+];
 
 function Plugin() {
-  const [selectedNodesCount, setSelectedNodesCount] = useState(0);
-  const [searching, setSearching] = useState(false);
-  const [searchTerms, setSearchTerms] = useState<SearchOptions>({});
-  const [name, setName] = useState('');
+  const [selectedStyleType, setSelectedStyleType] =
+    useState<StyleType>('EFFECT');
+  const [fromStyleId, setFromStyleId] = useState<string | null>(null);
+  const [fromStyleOptions, setFromStyleOptions] = useState<StyleOption[]>([]);
+  const [toStyleId, setToStyleId] = useState<string | null>(null);
+  const [toStyleOptions, setToStyleOptions] = useState<StyleOption[]>([]);
 
   useEffect(() => {
-    const newSearchTerms: SearchOptions = {};
-    if (name) {
-      newSearchTerms.name = name;
-    }
-    setSearchTerms(newSearchTerms);
-  }, [name]);
+    on<GetStylesResultHandler>('GET_STYLES_RESULT', (result) => {
+      setFromStyleOptions(
+        result.styles.map((style) => ({
+          text: style.name,
+          value: style.id,
+        })),
+      );
+      setToStyleOptions(
+        result.styles.map((style) => ({
+          text: style.name,
+          value: style.id,
+        })),
+      );
+    });
+  }, []);
+
+  useEffect(() => {
+    setFromStyleId(null);
+    setToStyleId(null);
+    emit<GetStylesHandler>('GET_STYLES', { type: selectedStyleType });
+  }, [selectedStyleType]);
 
   const handleSearchAndSelectClick = useCallback(() => {
-    if (!isEmpty(searchTerms) && !searching) {
-      setSearching(true);
-      // timeout to allow UI to show the loading indicator, since the ui will freeze if theres too many stuff
-      setTimeout(() => {
-        emit<SearchAndSelectHandler>('SEARCH_AND_SELECT', searchTerms);
-      }, 10);
+    if (fromStyleId && toStyleId) {
+      emit<ReplaceStyleHandler>('REPLACE_STYLE', { fromStyleId, toStyleId });
     }
-  }, [searchTerms, searching]);
-
-  useEffect(() => {
-    on<SearchResultHandler>('SEARCH_RESULT', (result) => {
-      setSearching(false);
-      setSelectedNodesCount(result.selectedNodesCount);
-    });
-  });
+  }, [fromStyleId, toStyleId]);
 
   const handleCloseClick = useCallback(() => {
     emit<CloseHandler>('CLOSE');
   }, []);
+
+  const handleFromStyleChange = useCallback(
+    (event: JSX.TargetedEvent<HTMLInputElement>) => {
+      const newValue = event.currentTarget.value;
+      setFromStyleId(newValue);
+    },
+    [setFromStyleId],
+  );
+
+  const handleToStyleChange = useCallback(
+    (event: JSX.TargetedEvent<HTMLInputElement>) => {
+      const newValue = event.currentTarget.value;
+      setToStyleId(newValue);
+    },
+    [setToStyleId],
+  );
+
+  const handleSelectedStyleTypeChange = useCallback(
+    (event: JSX.TargetedEvent<HTMLInputElement>) => {
+      const newValue = event.currentTarget.value;
+      setSelectedStyleType(newValue as StyleType);
+    },
+    [setSelectedStyleType],
+  );
+
   return (
     <Container space="medium">
       <VerticalSpace space="small" />
-      <Text>Search Constraints</Text>
+      <SegmentedControl
+        onChange={handleSelectedStyleTypeChange}
+        options={StyleTypesOptions}
+        value={selectedStyleType}
+      />
       <VerticalSpace space="small" />
-      <Divider />
-      <VerticalSpace space="small" />
-      <TextField name="by name" onValueInput={setName} value={name} />
-      <VerticalSpace space="large" />
       <Text>
-        <Muted>Selected Nodes: {selectedNodesCount}</Muted>
+        <Muted>Style to copy from:</Muted>
       </Text>
+      <VerticalSpace space="small" />
+      <Dropdown
+        onChange={handleFromStyleChange}
+        options={fromStyleOptions}
+        value={fromStyleId}
+        disabled={!fromStyleOptions.length}
+      />
+
+      <VerticalSpace space="small" />
+      <Text>
+        <Muted>Style to copy to:</Muted>
+      </Text>
+      <VerticalSpace space="small" />
+      <Dropdown
+        onChange={handleToStyleChange}
+        options={toStyleOptions}
+        value={toStyleId}
+        disabled={!toStyleOptions.length}
+      />
+
       <VerticalSpace space="extraLarge" />
       <Columns space="extraSmall">
         <Button fullWidth onClick={handleSearchAndSelectClick}>
-          {searching ? <LoadingIndicator /> : 'Search And Select'}
+          Replace
         </Button>
         <Button fullWidth onClick={handleCloseClick} secondary>
           Close

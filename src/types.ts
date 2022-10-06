@@ -1,37 +1,35 @@
 import { EventHandler } from '@create-figma-plugin/utilities';
 
-export type StyleConstraints = {
-  strokeStyleId?: string;
-  fillStyleId?: string;
-  gridStyleId?: string;
-  effectStyleId?: string;
-  backgroundStyleId?: string;
-  textStyleId?: string;
+export type GetStyleOptions = {
+  type: StyleType;
 };
 
-export type BySelectedNode = {
-  styles?: StyleConstraints;
-  size?: StyleConstraints;
-  effectStyleId?: string;
-};
-
-export type SearchOptions = {
-  name?: string;
-  bySelectedNode?: BySelectedNode;
-};
-
-export type SearchResult = {
-  selectedNodesCount: number;
-};
-
-export interface SearchResultHandler extends EventHandler {
-  name: 'SEARCH_RESULT';
-  handler: (result: SearchResult) => void;
+export interface GetStylesHandler extends EventHandler {
+  name: 'GET_STYLES';
+  handler: (options: GetStyleOptions) => void;
 }
 
-export interface SearchAndSelectHandler extends EventHandler {
-  name: 'SEARCH_AND_SELECT';
-  handler: (options: SearchOptions) => void;
+export type GetStylesResult = {
+  type: StyleType;
+  styles: Array<{
+    id: string;
+    name: string;
+  }>;
+};
+
+export interface GetStylesResultHandler extends EventHandler {
+  name: 'GET_STYLES_RESULT';
+  handler: (result: GetStylesResult) => void;
+}
+
+export type ReplaceOptions = {
+  fromStyleId: string;
+  toStyleId: string;
+};
+
+export interface ReplaceStyleHandler extends EventHandler {
+  name: 'REPLACE_STYLE';
+  handler: (options: ReplaceOptions) => void;
 }
 
 export interface CloseHandler extends EventHandler {

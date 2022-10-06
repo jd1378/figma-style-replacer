@@ -34,8 +34,8 @@
     "editorType": [
       "figma"
     ],
-    "id": "advanced-search",
-    "name": "Advanced Search",
+    "id": "style-replacer",
+    "name": "Style Replacer",
     "main": "src/main.ts",
     "ui": "src/ui.tsx"
   }
