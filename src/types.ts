@@ -23,8 +23,8 @@ export interface GetStylesResultHandler extends EventHandler {
 }
 
 export type ReplaceOptions = {
-  fromStyleId: string;
-  toStyleId: string;
+  findStyleId: string;
+  replaceStyleId: string;
 };
 
 export interface ReplaceStyleHandler extends EventHandler {

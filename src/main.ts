@@ -11,42 +11,39 @@ import {
 
 export default () => {
   on<ReplaceStyleHandler>('REPLACE_STYLE', (replaceOptions: ReplaceOptions) => {
-    const { fromStyleId, toStyleId } = replaceOptions;
-    const fromStyle = figma.getStyleById(fromStyleId);
-    const toStyle = figma.getStyleById(toStyleId);
-    if (
-      fromStyle &&
-      toStyle &&
-      fromStyle.type === toStyle.type &&
-      !toStyle.remote
-    ) {
-      toStyle.description = fromStyle.description;
-      if (fromStyle.type === 'EFFECT') {
-        (toStyle as EffectStyle).effects = (fromStyle as EffectStyle).effects;
-      } else if (fromStyle.type === 'GRID') {
-        (toStyle as GridStyle).layoutGrids = (
-          fromStyle as GridStyle
-        ).layoutGrids;
-      } else if (fromStyle.type === 'PAINT') {
-        (toStyle as PaintStyle).paints = (fromStyle as PaintStyle).paints;
-      } else if (fromStyle.type === 'TEXT') {
-        (toStyle as TextStyle).fontName = (fromStyle as TextStyle).fontName;
-        (toStyle as TextStyle).fontSize = (fromStyle as TextStyle).fontSize;
-        (toStyle as TextStyle).letterSpacing = (
-          fromStyle as TextStyle
-        ).letterSpacing;
-        (toStyle as TextStyle).lineHeight = (fromStyle as TextStyle).lineHeight;
-        (toStyle as TextStyle).paragraphIndent = (
-          fromStyle as TextStyle
-        ).paragraphIndent;
-        (toStyle as TextStyle).paragraphSpacing = (
-          fromStyle as TextStyle
-        ).paragraphSpacing;
-        (toStyle as TextStyle).textCase = (fromStyle as TextStyle).textCase;
-        (toStyle as TextStyle).textDecoration = (
-          fromStyle as TextStyle
-        ).textDecoration;
-      }
+    const { findStyleId, replaceStyleId } = replaceOptions;
+    const foundStyle = figma.getStyleById(findStyleId);
+    const replacedStyle = figma.getStyleById(replaceStyleId);
+    if (foundStyle && replacedStyle) {
+      // found style and replacedStyle are always the same type, so we don't check anymore
+
+      // findAll serves as a traversal tool, we use it with side effects to not write 2 loops
+      /* eslint-disable no-param-reassign */
+      figma.currentPage.findAll((node: SceneNode) => {
+        if ((node as ComponentNode).fillStyleId === findStyleId) {
+          (node as ComponentNode).fillStyleId = replaceStyleId;
+        }
+        if ((node as ComponentNode).strokeStyleId === findStyleId) {
+          (node as ComponentNode).strokeStyleId = replaceStyleId;
+        }
+        if ((node as ComponentNode).gridStyleId === findStyleId) {
+          (node as ComponentNode).gridStyleId = replaceStyleId;
+        }
+        if ((node as ComponentNode).effectStyleId === findStyleId) {
+          (node as ComponentNode).effectStyleId = replaceStyleId;
+        }
+        if ((node as ComponentNode).backgroundStyleId === findStyleId) {
+          (node as ComponentNode).backgroundStyleId = replaceStyleId;
+        }
+        if ((node as ComponentNode).backgroundStyleId === findStyleId) {
+          (node as ComponentNode).backgroundStyleId = replaceStyleId;
+        }
+        if ((node as TextNode).textStyleId === findStyleId) {
+          (node as TextNode).textStyleId = replaceStyleId;
+        }
+        return false;
+      });
+      /* eslint-enable no-param-reassign */
     }
   });
   on<GetStylesHandler>('GET_STYLES', (options) => {
@@ -74,7 +71,7 @@ export default () => {
     figma.closePlugin();
   });
   showUI({
-    height: 230,
+    height: 245,
     width: 250,
   });
 };

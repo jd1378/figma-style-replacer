@@ -3,7 +3,7 @@ import {
   Columns,
   Container,
   Dropdown,
-  Muted,
+  Bold,
   render,
   SegmentedControl,
   Text,
@@ -43,20 +43,22 @@ const StyleTypesOptions = [
 function Plugin() {
   const [selectedStyleType, setSelectedStyleType] =
     useState<StyleType>('EFFECT');
-  const [fromStyleId, setFromStyleId] = useState<string | null>(null);
-  const [fromStyleOptions, setFromStyleOptions] = useState<StyleOption[]>([]);
-  const [toStyleId, setToStyleId] = useState<string | null>(null);
-  const [toStyleOptions, setToStyleOptions] = useState<StyleOption[]>([]);
+  const [findStyleId, setFindStyleId] = useState<string | null>(null);
+  const [findStyleOptions, setFindStyleOptions] = useState<StyleOption[]>([]);
+  const [replaceStyleId, setReplaceStyleId] = useState<string | null>(null);
+  const [replaceStyleOptions, setReplaceStyleOptions] = useState<StyleOption[]>(
+    [],
+  );
 
   useEffect(() => {
     on<GetStylesResultHandler>('GET_STYLES_RESULT', (result) => {
-      setFromStyleOptions(
+      setFindStyleOptions(
         result.styles.map((style) => ({
           text: style.name,
           value: style.id,
         })),
       );
-      setToStyleOptions(
+      setReplaceStyleOptions(
         result.styles.map((style) => ({
           text: style.name,
           value: style.id,
@@ -66,35 +68,38 @@ function Plugin() {
   }, []);
 
   useEffect(() => {
-    setFromStyleId(null);
-    setToStyleId(null);
+    setFindStyleId(null);
+    setReplaceStyleId(null);
     emit<GetStylesHandler>('GET_STYLES', { type: selectedStyleType });
   }, [selectedStyleType]);
 
   const handleSearchAndSelectClick = useCallback(() => {
-    if (fromStyleId && toStyleId) {
-      emit<ReplaceStyleHandler>('REPLACE_STYLE', { fromStyleId, toStyleId });
+    if (findStyleId && replaceStyleId) {
+      emit<ReplaceStyleHandler>('REPLACE_STYLE', {
+        findStyleId,
+        replaceStyleId,
+      });
     }
-  }, [fromStyleId, toStyleId]);
+  }, [findStyleId, replaceStyleId]);
 
   const handleCloseClick = useCallback(() => {
     emit<CloseHandler>('CLOSE');
   }, []);
 
-  const handleFromStyleChange = useCallback(
+  const handleFindStyleChange = useCallback(
     (event: JSX.TargetedEvent<HTMLInputElement>) => {
       const newValue = event.currentTarget.value;
-      setFromStyleId(newValue);
+      setFindStyleId(newValue);
     },
-    [setFromStyleId],
+    [setFindStyleId],
   );
 
-  const handleToStyleChange = useCallback(
+  const handleReplaceStyleChange = useCallback(
     (event: JSX.TargetedEvent<HTMLInputElement>) => {
       const newValue = event.currentTarget.value;
-      setToStyleId(newValue);
+      setReplaceStyleId(newValue);
     },
-    [setToStyleId],
+    [setReplaceStyleId],
   );
 
   const handleSelectedStyleTypeChange = useCallback(
@@ -108,36 +113,47 @@ function Plugin() {
   return (
     <Container space="medium">
       <VerticalSpace space="small" />
+
+      <Text style={{ fontWeight: 'medium' }}>Choose Style Type:</Text>
+
+      <VerticalSpace space="small" />
+
       <SegmentedControl
         onChange={handleSelectedStyleTypeChange}
         options={StyleTypesOptions}
         value={selectedStyleType}
       />
-      <VerticalSpace space="small" />
+
+      <VerticalSpace space="large" />
+
       <Text>
-        <Muted>Style to copy from:</Muted>
+        <Bold>Find</Bold>:
       </Text>
-      <VerticalSpace space="small" />
+      <VerticalSpace space="extraSmall" />
       <Dropdown
-        onChange={handleFromStyleChange}
-        options={fromStyleOptions}
-        value={fromStyleId}
-        disabled={!fromStyleOptions.length}
+        variant="border"
+        onChange={handleFindStyleChange}
+        options={findStyleOptions}
+        value={findStyleId}
+        disabled={!findStyleOptions.length}
       />
 
       <VerticalSpace space="small" />
+
       <Text>
-        <Muted>Style to copy to:</Muted>
+        <Bold>Replace</Bold>:
       </Text>
-      <VerticalSpace space="small" />
+      <VerticalSpace space="extraSmall" />
       <Dropdown
-        onChange={handleToStyleChange}
-        options={toStyleOptions}
-        value={toStyleId}
-        disabled={!toStyleOptions.length}
+        variant="border"
+        onChange={handleReplaceStyleChange}
+        options={replaceStyleOptions}
+        value={replaceStyleId}
+        disabled={!replaceStyleOptions.length}
       />
 
-      <VerticalSpace space="extraLarge" />
+      <VerticalSpace space="medium" />
+
       <Columns space="extraSmall">
         <Button fullWidth onClick={handleSearchAndSelectClick}>
           Replace
