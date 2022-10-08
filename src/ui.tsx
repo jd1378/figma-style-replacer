@@ -27,13 +27,14 @@ type StyleOption = {
 
 const StyleTypesOptions = [
   {
-    value: 'EFFECT',
+    value: 'TEXT',
   },
   {
+    children: 'COLOR',
     value: 'PAINT',
   },
   {
-    value: 'TEXT',
+    value: 'EFFECT',
   },
   {
     value: 'GRID',
@@ -41,8 +42,7 @@ const StyleTypesOptions = [
 ];
 
 function Plugin() {
-  const [selectedStyleType, setSelectedStyleType] =
-    useState<StyleType>('EFFECT');
+  const [selectedStyleType, setSelectedStyleType] = useState<StyleType>('TEXT');
   const [findStyleId, setFindStyleId] = useState<string | null>(null);
   const [findStyleOptions, setFindStyleOptions] = useState<StyleOption[]>([]);
   const [replaceStyleId, setReplaceStyleId] = useState<string | null>(null);
